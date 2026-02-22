@@ -1,45 +1,42 @@
 # Temporal RAG: The "Calendar Layer" for Time-Aware Agent Memory
 
 **Date**: February 2026
-**Critical For**: Medical knowledge evolution, regulatory changes, longitudinal clinical data
 
 ---
 
 ## Executive Summary
 
-Temporal RAG solves a **fundamental blindness** in traditional RAG systems: they treat all documents as **timeless**. A 2018 TUSS procedure table and a 2025 TUSS table about the same code look "semantically similar" but are **clinically different**—one is obsolete, the other current.
+Temporal RAG solves a **fundamental blindness** in traditional RAG systems: they treat all documents as **timeless**. A 2018 document and a 2025 document about the same fact look "semantically similar" but are **fundamentally different**—one is outdated, the other current.
 
 **The Problem**: Conventional vector embeddings optimize for semantic similarity but **under-encode temporal signals**, leading to **temporal hallucination** (wrong year/version as answer).
 
 **The Solution**: Temporal RAG adds a **timestamp dimension** to your memory graph, so the agent knows:
-- "This procedure code 31005 had reimbursement R$ 150 in 2023"
-- "CREMESP updated that requirement in 2024-Q2"
-- "Current version (2025) is R$ 175"
+- "This fact had value X in 2018"
+- "The situation evolved in 2023"
+- "Current version (2025) is value Y"
 
 ---
 
-## The Core Problem: Why Time Matters in Medicine
+## The Core Problem: Why Time Matters
 
-Your medical context makes Temporal RAG **non-negotiable**:
+Anyone building knowledge-dependent agents needs to handle **temporal reasoning**:
 
-### Clinical Protocols Evolve
-- **2020**: Hypertension treatment per SBC guideline A
-- **2023**: SBC releases updated guideline B (A is now obsolete)
-- **2025**: New evidence → guideline C
-- **Without Temporal RAG**: Agent retrieves all three equally, hallucinating "mixed protocols"
-- **With Temporal RAG**: Agent returns guideline C + understands the evolution chain
+### Knowledge Evolution
+- **2018**: Framework A was standard
+- **2023**: Framework B becomes preferred (A is now outdated)
+- **2025**: Framework C emerges with new evidence
+- **Without Temporal RAG**: Agent retrieves all three equally, mixing outdated and current knowledge
+- **With Temporal RAG**: Agent returns framework C + understands the evolution chain
 
-### Regulatory Changes (CREMESP, ANS, TUSS)
-- **TUSS codes** get updated annually
-- **Reimbursement values** change quarterly
-- **Billing rules** shift with new regulations
-- **Without timestamps**: Agent suggests outdated codes/values
+### Continuous Data Updates
+- Information changes: prices, stock indices, weather patterns, software versions
+- **Without timestamps**: Agent suggests obsolete data
 - **With Temporal RAG**: Agent checks "valid as of today"
 
-### Longitudinal Patient History
-- Patient A had blood pressure 160/100 in Jan 2025, 140/90 in Feb 2025
-- **Order matters**: progression shows response to treatment
-- **Timestamps required**: to distinguish trending vs. static
+### Temporal Dependencies & Causality
+- Event A happened before Event B
+- **Order matters**: shows cause-effect, progression, trends
+- **Timestamps required**: to distinguish trending vs. static data
 
 ---
 
@@ -60,35 +57,35 @@ Your medical context makes Temporal RAG **non-negotiable**:
 - ✓ **6–19 point improvement** in Hit@1 vs. prior GraphRAGs
 - ✓ Benchmarks: CronQuestion, MultiTQ
 
-**Best for**: Regulatory changes, event-driven medical updates (you get exactly what happened when)
+**Best for**: Event-driven systems, time-series reasoning, and applications where temporal distance matters
 
 ---
 
-### 2. TG-RAG (Temporal GraphRAG) — RECOMMENDED FOR YOU
+### 2. TG-RAG (Temporal GraphRAG) — RECOMMENDED
 **Paper**: arXiv:2510.13590  
 **Key Idea**: Two-level temporal graph with **incremental updates**
 
 **Architecture**:
 - **Level 1**: Temporal Knowledge Graph
-  - Nodes = entities (procedures, drugs, guidelines)
+  - Nodes = entities (concepts, facts, entities)
   - Edges = relations with explicit timestamps
-  - E.g.: "CREMESP_2024_regulation" → "updated_by" → "ANS_2025_change" [timestamp: 2024-Q2]
+  - E.g.: "Concept_A" → "superseded_by" → "Concept_B" [timestamp: 2023]
 
 - **Level 2**: Hierarchical Time Graph
   - Captures trends at multiple temporal granularities (yearly, quarterly, monthly)
-  - Enables reasoning like "TUSS has been increasing steadily"
+  - Enables reasoning like "trend has been increasing steadily"
 
 **Key Advantage**: Incremental updates
-- New fact arrives: "2025 TUSS update released"
+- New fact arrives: "2025 update released"
 - Insert only into affected temporal nodes
 - **No full reindex needed** (vs. standard GraphRAG which rebuilds everything)
 
 **Results**:
 - ✓ **18–38 point improvement** vs. standard GraphRAG on multi-temporal questions
 - ✓ Benchmark: Time-LongQA dataset
-- ✓ Supports continuous updates (perfect for evolving medical data)
+- ✓ Supports continuous updates without full reprocessing
 
-**Best for**: Your use case — TUSS/AMB tables that update continuously
+**Best for**: Systems with continuously evolving knowledge bases
 
 ---
 
@@ -97,11 +94,11 @@ Your medical context makes Temporal RAG **non-negotiable**:
 **Key Idea**: Resolves temporal ambiguities in queries
 
 **Problem it solves**:
-- Query: "What was the CREMESP rule on medical billing?"
-- Ambiguity: "When? 2020? 2024? Today?"
+- Query: "What was the standard approach?"
+- Ambiguity: "When? 2018? 2023? Today?"
 - T-GRAG: Central Temporal Knowledge Graph + 5 specialized modules to resolve "when?"
 
-**Best for**: Comparative temporal queries ("compare 2022 vs. 2025 guidelines")
+**Best for**: Comparative temporal queries ("compare 2022 vs. 2025 approaches")
 
 ---
 
@@ -110,16 +107,16 @@ Your medical context makes Temporal RAG **non-negotiable**:
 - Uses **Matryoshka embeddings** + temporal contrastive loss
 - Dynamic length selection: pick precision vs. indexing cost
 
-**Best for**: Cost-sensitive deployment (Raspberry Pi agent 😄)
+**Best for**: Cost-sensitive deployment and resource-constrained agents
 
 ---
 
 ### 5. E²RAG
 **Key Idea**: Entity-event bipartite graph
-- Nodes = entities (drug, procedure) + events (regulation change)
+- Nodes = entities (concepts, objects) + events (changes, updates)
 - Temporal linkages between entities and events affecting them
 
-**Best for**: Causality tracking ("This drug was approved → then new evidence arrived → new warnings added")
+**Best for**: Causality tracking and understanding how events impact entities
 
 ---
 
@@ -127,11 +124,11 @@ Your medical context makes Temporal RAG **non-negotiable**:
 
 | Framework | Approach | Strength | Best Use | Complexity |
 |-----------|----------|----------|----------|------------|
-| **STAR-RAG** | Rule graph + temporal propagation | 97% token reduction | Fast inference on laptop | Medium |
-| **TG-RAG** ⭐ | Two-level temporal graph | Incremental updates (perfect for TUSS) | Medical knowledge evolution | Medium |
-| **T-GRAG** | Dynamic disambiguation | Resolves "when?" in queries | Temporal comparisons | High |
+| **STAR-RAG** | Rule graph + temporal propagation | 97% token reduction | Fast inference, latency-critical | Medium |
+| **TG-RAG** ⭐ | Two-level temporal graph | Incremental updates (perfect for evolving data) | Continuously updating knowledge bases | Medium |
+| **T-GRAG** | Dynamic disambiguation | Resolves "when?" in queries | Temporal comparisons & ambiguity resolution | High |
 | **TMRL** | Matryoshka + contrastive loss | Single embedding, no size cost | Embedded/low-resource agents | Medium |
-| **E²RAG** | Entity-event bipartite | Causal temporal chains | Drug approvals, regulatory impact | High |
+| **E²RAG** | Entity-event bipartite | Causal temporal chains | Causality & impact tracking | High |
 
 ---
 
@@ -139,7 +136,7 @@ Your medical context makes Temporal RAG **non-negotiable**:
 
 **Current 4-layer stack**:
 ```
-Layer 1: PageIndex          → exact page structure + dates found in PDFs
+Layer 1: PageIndex          → exact page structure + dates found in documents
 Layer 2: HippoRAG           → associative long-term memory (entities + relations)
 Layer 3: PathRAG (optional) → clean pruned logical paths
 Layer 4: Lucid-memory       → personal recency + episodes
@@ -158,43 +155,42 @@ Layer 3: PathRAG (optional)  → keeps clean time-ordered logical paths
 Layer 4: Lucid-memory        → personal recency weighting on top
 ```
 
-**Query flow example** (medical: "Show me the latest TUSS procedure for knee MRI"):
+**Query flow example** (generic: "Show me the latest version of X"):
 
 ```
-1. PageIndex: Grabs exact sections from 2023–2025 PDFs, extracts dates
-2. HippoRAG: Finds related concepts (knee, MRI, reimbursement, TUSS)
+1. PageIndex: Grabs exact sections from documents, extracts dates
+2. HippoRAG: Finds related concepts and connections
 3. **Temporal RAG**: Filters to valid-as-of-today versions only
-   - Discards 2023 entry as "superseded"
-   - Ranks 2025 entry highest
-4. PathRAG: Gives clean chain: "2023 rule → updated Q2-2024 → current 2025"
-5. Lucid: Adds: "You asked about this last month, here's your note + new updates"
+   - Discards outdated versions as "superseded"
+   - Ranks current version highest
+4. PathRAG: Gives clean chain: "2018 version → evolved 2023 → current 2025"
+5. Lucid: Adds: "You asked about this before, here's what's changed since"
 6. Answer: Accurate + time-stamped + shows evolution
 ```
 
 ---
 
-## Medical Use Cases That Require Temporal RAG
+## Real-World Use Cases
 
-### 1. TUSS/AMB Procedure Evolution
-- Reimbursement codes and values change annually (sometimes quarterly)
-- Temporal RAG ensures you always quote current rates
+### 1. Knowledge Base Evolution
+- Technologies, frameworks, best practices change over time
+- Agent must know which version/recommendation is current
 
-### 2. CREMESP Regulatory Updates
-- New regulations override old ones
-- Agent must know: "This rule was valid until 2024-Q2, then replaced"
+### 2. Regulatory & Policy Changes
+- Regulations, standards, compliance rules update
+- Agent must reference the correct version for the current date
 
-### 3. Clinical Guideline Evolution
-- SBC, ANS, SBEM release updated guidelines
-- Temporal RAG tracks: when old guideline became obsolete, when new one took effect
+### 3. Trend Analysis
+- Prices, indices, metrics change over time
+- Temporal ordering critical for understanding progression
 
-### 4. Drug Approvals & Warnings
-- Drug X approved 2020 → new side effect discovered 2023 → contraindication added 2024
-- Agent must understand temporal causality
+### 4. Causality & Impact Chains
+- Event A → triggers Event B → causes Event C
+- Temporal ordering enables causal reasoning
 
-### 5. Longitudinal Patient Records
-- Lab results over time (trend analysis)
-- Medication timeline (drug A → drug B → combination)
-- Temporal order critical for clinical reasoning
+### 5. Longitudinal Data & Progression
+- Historical records where order and timing matter
+- Trend analysis, change detection, progression understanding
 
 ---
 
@@ -203,16 +199,16 @@ Layer 4: Lucid-memory        → personal recency weighting on top
 ### **Choose TG-RAG for your stack**
 
 **Why**:
-1. **Incremental updates**: TUSS tables get updated; no full reindex overhead
-2. **Hierarchical time graph**: Can reason about trends ("reimbursement increasing steadily")
+1. **Incremental updates**: New data arrives; no full reindex overhead
+2. **Hierarchical time graph**: Can reason about trends ("has been increasing steadily")
 3. **18–38 point improvement** on multi-temporal questions
-4. **Proven on medical-like data**: Time-LongQA dataset includes longitudinal reasoning
+4. **Production-proven**: Tested on diverse temporal reasoning benchmarks
 
 ### Integration Steps
 
 1. **Fork TG-RAG repository**
    - GitHub: Search "TG-RAG" or arXiv:2510.13590
-   - Location: `Aylton/TempGraphRAG` (rename as needed)
+   - Location: `Aylton/TempGraphRAG`
 
 2. **Create adapter in memory_stack.py**
    ```python
@@ -242,7 +238,7 @@ Layer 4: Lucid-memory        → personal recency weighting on top
    ```
 
 3. **Feed timestamps from PageIndex into Temporal RAG**
-   - PageIndex already extracts dates from PDFs
+   - PageIndex already extracts dates from documents
    - Pass those timestamps when building temporal graph
 
 4. **Update README**: Add Temporal RAG to memory stack description
@@ -255,13 +251,13 @@ Layer 4: Lucid-memory        → personal recency weighting on top
 - **Multi-temporal questions** (Time-LongQA):
   - Standard GraphRAG: ~58% accuracy
   - TG-RAG: ~76% accuracy (+18 points)
-- **Complex temporal reasoning** (asking "what changed between 2022 and 2025?"):
+- **Complex temporal reasoning** (asking "what changed between year X and Y?"):
   - TG-RAG: ~76% accuracy
   - Standard RAG: ~38% accuracy (+38 points!)
 
 ### STAR-RAG Performance
 - **Token reduction**: 97% fewer tokens to LLM
-- **Latency**: ~2x faster inference (critical if on laptop)
+- **Latency**: ~2x faster inference (critical for real-time systems)
 - **Hit@1**: +6–19 points vs. GraphRAG baselines
 
 ---
@@ -269,23 +265,23 @@ Layer 4: Lucid-memory        → personal recency weighting on top
 ## Next Steps
 
 - [ ] Fork TG-RAG repository (`Aylton/TempGraphRAG`)
-- [ ] Create test harness: ingest 2023–2025 TUSS samples with timestamps
-- [ ] Benchmark: "Show me the latest reimbursement for code 31005"
+- [ ] Create test harness with temporal reasoning examples
+- [ ] Benchmark against single-pass RAG baseline
 - [ ] Integrate into memory_stack.py
 - [ ] Update README to document 5-layer stack
-- [ ] (Optional) Run comparative benchmarks: TG-RAG vs. STAR-RAG for your medical domain
+- [ ] (Optional) Run comparative benchmarks: TG-RAG vs. STAR-RAG for your use case
 
 ---
 
 ## Why This Matters
 
-Your medical agent will now:
-✓ Never confuse old protocols with new ones  
-✓ Understand regulatory evolution ("this changed when?")
-✓ Support longitudinal reasoning (patient trends over time)
-✓ Answer: "Latest TUSS code for knee MRI is X (valid as of Feb 2026)"
+Your agent will now:
+✓ Never confuse outdated information with current facts  
+✓ Understand knowledge evolution ("this changed when?")
+✓ Support temporal reasoning and causal analysis
+✓ Answer: "Latest version of X is Y (valid as of today)"
 
-**Temporal RAG = The difference between hallucinating outdated medical info and being clinically current. 🚀**
+**Temporal RAG = The difference between hallucinating outdated information and being current in a dynamic world. 🚀**
 
 ---
 
@@ -297,4 +293,3 @@ Your medical agent will now:
 4. **TMRL**: Emergent Mind resource
 5. **E²RAG**: Emergent Mind resource
 6. **Temporal RAG Overview**: emergentmind.com/topics/temporal-retrieval-augmented-generation-rag
-
