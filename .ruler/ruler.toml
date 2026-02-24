@@ -1,0 +1,61 @@
+# Ruler configuration for AI Agent Memory Stack
+# Centralizes rules across all coding agents (Cursor, Claude, Copilot, etc.)
+
+[general]
+project_name = "AI-Agent-Memory-Stack"
+collaboration_mode = true
+description = "Unified memory + OpenClaw integration via Ruler"
+
+# Agent rules - what all agents should follow
+[agents.default]
+enabled = true
+output_path = "AGENTS.md"
+
+# Memory stack specific rules
+[agents.memory]
+enabled = true
+output_path = ".ruler/AGENTS_MEMORY.md"
+
+# MCP (Model Context Protocol) servers that memory stack exports
+[mcp]
+enabled = true
+merge_strategy = "merge"
+
+# PageIndex as MCP server - exact text retrieval
+[mcp_servers.pageindex]
+command = "python"
+args = ["-m", "pageindex.mcp"]
+description = "Tree-based document indexing - no vectors, no loss"
+enabled = true
+
+# LightRAG as MCP server - entity graphs and relationships
+[mcp_servers.lightrag]
+command = "python"
+args = ["-m", "lightrag.mcp"]
+description = "Entity graphs, relationships, reasoning chains"
+enabled = true
+
+# Lucid Memory as MCP server - episodic recall
+[mcp_servers.lucid]
+command = "python"
+args = ["-m", "lucid_memory.mcp"]
+description = "Human-like episodic memory with recency + spreading activation"
+enabled = true
+
+# Cross-repo awareness
+[cross_repo]
+openclaw_config = "https://github.com/Aylton/openclaw-config"
+ruler_fork = "https://github.com/Aylton/ruler-ai-cohesion"
+mcporter_location = "config/mcporter.json"
+
+# Skills that can be exported and shared
+[skills]
+enable_export = true
+export_directory = ".ruler/skills"
+
+# Path 2: Grok integration (documented, ready to enable)
+[path_2]
+enabled = false
+comment = "When ready: enable agent-bridge MCP, MCP SuperAssistant extension, and grok agent"
+bridge_file = ".agent-comm/messages.jsonl"
+agent_bridge_py = "agent-bridge.py"
